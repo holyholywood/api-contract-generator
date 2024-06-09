@@ -1,20 +1,33 @@
-import TextEditor from "@/components/molecules/TextEditor";
+import ThemeSwitcher from "@/components/molecules/ThemeSwitcher";
+import FloatingAction from "@/components/organisms/FloatingAction";
+import MultiQueryInput from "@/components/organisms/MultiQueryInput";
+import ParamsSection from "@/components/organisms/ParamsSection";
+import ResponseSection from "@/components/organisms/ResponseSection";
+import ResultSection from "@/components/organisms/ResultSection";
 import useCreateApiContract from "@/model/API/useCreateApiContract";
 import { HTTPMethodOptioType, HTTPMethodOption } from "@/resources/options";
-import { Button, Chip, Divider, Input, Select, SelectItem, Textarea } from "@nextui-org/react";
-import { Fragment, useState } from "react";
-import { RiAddLine, RiDeleteBinLine } from "react-icons/ri";
+import { Divider, Input, Select, SelectItem } from "@nextui-org/react";
 
 const Home = () => {
   const { STATE, HANDLER } = useCreateApiContract();
   return (
     <>
-      <FloatingAction />
+      <FloatingAction onSave={HANDLER.handleSubmit} />
       <div className="max-w-5xl mx-auto space-y-4 pb-40">
-        <header className="py-8">
+        <header className="py-8 flex items-center justify-between gap-8">
           <h1 className="font-medium text-xl">API Contract Generators</h1>
+          <ThemeSwitcher />
         </header>
         <section className="space-y-10">
+          <Input
+            value={STATE.title}
+            onChange={(val) => STATE.setTitle(val.target.value)}
+            label="Title"
+            labelPlacement="outside"
+            placeholder="e.g: Get User By ID"
+            className="max-w-2xl"
+            variant="faded"
+          />
           <Select<HTTPMethodOptioType[]>
             label="Method"
             labelPlacement="outside"
@@ -34,7 +47,7 @@ const Home = () => {
           <Input
             value={STATE.baseURL}
             onChange={(val) => STATE.setBaseURL(val.target.value)}
-            label="Base URL"
+            label="Base URL (Optional)"
             labelPlacement="outside"
             placeholder="e.g: https://yourdomain.com"
             className="max-w-2xl"
@@ -50,252 +63,26 @@ const Home = () => {
             description="You can add '/:segment' as segment parameter such as /users/:id"
             variant="faded"
           />
-          {STATE.params.length > 0 && (
-            <>
-              {STATE.params.map((param, index) => (
-                <Fragment key={index}>
-                  <div className="space-y-2">
-                    <div className="flex gap-4">
-                      <Input
-                        value={param.name}
-                        label="Params"
-                        labelPlacement="outside"
-                        placeholder="e.g: id, user_id, uuid"
-                        className="max-w-2xl"
-                        variant="underlined"
-                        readOnly
-                      />
-                      <Select
-                        label="Params Type"
-                        labelPlacement="outside"
-                        className="max-w-[8rem]"
-                        defaultSelectedKeys={["string"]}
-                        selectedKeys={[param.type]}
-                        variant="faded"
-                        onSelectionChange={(val) => {
-                          const type = Array.from(val);
-                          STATE.setParams(index, type[0] as "string" | "integer");
-                        }}
-                      >
-                        {["string", "integer"].map((el) => (
-                          <SelectItem key={el}>{el}</SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
-                </Fragment>
-              ))}
-            </>
-          )}
+          <ParamsSection params={STATE.params} setParams={STATE.setParams} />
           <div className="space-y-6">
             <div className="text-sm">Request Query</div>
-            <MultiInput />
+            <MultiQueryInput />
           </div>
-          {STATE.responses.map((response, index) => (
-            <ResponseBodyInput key={index} index={index} setResponses={STATE.setResponses} {...response} />
-          ))}
+          <ResponseSection responses={STATE.responses} setResponses={STATE.setResponses} />
         </section>
       </div>
+      <Divider className="bg-primary-500 !my-20" />
+      <ResultSection
+        title={STATE.title}
+        baseURL={STATE.baseURL}
+        endpoint={STATE.endpoint}
+        method={STATE.method}
+        params={STATE.params}
+        query={STATE.query}
+        responses={STATE.responses}
+      />
     </>
   );
 };
 
 export default Home;
-
-const FloatingAction = () => {
-  return (
-    <div className="bg-default-200 fixed bottom-10 inset-x-0 mx-auto w-full max-w-5xl py-6 px-4 z-50 rounded-lg">
-      <div className="flex items-center gap-4 justify-between">
-        <div className="w-full bg-success-700 text-success-300 border border-success-400 rounded-md px-2 py-3">
-          Fill mandatory field as you need before save!
-        </div>
-        <Button color="secondary">Export</Button>
-        <Button color="primary">Save</Button>
-      </div>
-    </div>
-  );
-};
-
-type responseBodyInputProps = {
-  index: number;
-
-  code: number;
-  title: string;
-  description: string;
-  body: string;
-
-  setResponses: (
-    index: number,
-    data: {
-      code: number;
-      title: string;
-      description: string;
-      body: string;
-    }
-  ) => void;
-};
-const ResponseBodyInput = ({ index, setResponses, ...response }: responseBodyInputProps) => {
-  return (
-    <div className="space-y-8">
-      <h2 className="font-medium">Response</h2>
-      <Divider className="!mb-10"></Divider>
-      <div className="flex justify-between items-end pb-8">
-        <Input
-          className="max-w-[8rem]"
-          label="HTTP Code"
-          placeholder="eg: 200, 404"
-          type="number"
-          min={100}
-          max={599}
-          value={String(response.code)}
-          onChange={(e) => setResponses(index, { ...response, code: Number(e.target.value) })}
-          labelPlacement="outside"
-        />
-        <Button color="danger">
-          <RiDeleteBinLine />
-          Remove
-        </Button>
-      </div>
-      <Input
-        variant="faded"
-        className="max-w-2xl"
-        label="Title"
-        placeholder="e.g: Expected Response Condition"
-        labelPlacement="outside"
-        value={response.title}
-        onChange={(e) => setResponses(index, { ...response, title: e.target.value })}
-      />
-      <Textarea
-        variant="faded"
-        label="Description"
-        labelPlacement="outside"
-        value={response.description}
-        onChange={(e) => setResponses(index, { ...response, description: e.target.value })}
-      />
-      <TextEditor label="Body" />
-      <Button startContent={<RiAddLine />} className="mx-auto flex" color="primary" variant="bordered">
-        Add Response
-      </Button>
-    </div>
-  );
-};
-
-const MultiInput = () => {
-  const [count, setCount] = useState<number>(1);
-  const [queryCount, setQueryCount] = useState<number[]>([1]);
-  return (
-    <div className="space-y-8">
-      {queryCount.map((item, index) => (
-        <div className="flex w-full gap-8" key={item}>
-          <div className="w-full">
-            <QueryInput />
-          </div>
-          <div className="flex items-center justify-center h-full mt-6">
-            <Button
-              disabled={queryCount.length < 2}
-              isDisabled={queryCount.length < 2}
-              onPress={() => {
-                setQueryCount([...queryCount.filter((el) => el !== item)]);
-                setCount(count - 1);
-              }}
-              color="danger"
-              className=""
-            >
-              <RiDeleteBinLine />
-              Remove
-            </Button>
-          </div>
-        </div>
-      ))}
-      <Button
-        onPress={() => {
-          const now = count + 1;
-          setCount(now);
-          setQueryCount([...Array.from(Array(now), (_, i) => i + 1)]);
-        }}
-        startContent={<RiAddLine />}
-        className="mx-auto flex"
-        color="primary"
-        variant="bordered"
-      >
-        Add Request Query
-      </Button>
-    </div>
-  );
-};
-
-const QueryInput = () => {
-  const [option, setOption] = useState<string[]>([]);
-  const [optionName, setOptionName] = useState<string>("");
-  function onOptionChange() {
-    if (!option.includes(optionName) && Boolean(optionName)) {
-      setOption([...option, optionName]);
-    }
-    setOptionName("");
-  }
-  return (
-    <div className="space-y-4">
-      <div className="flex gap-4">
-        <Input
-          label="Key"
-          labelPlacement="outside"
-          placeholder="e.g: created_at, name, sort_by, sort_method"
-          className="max-w-sm"
-          variant="faded"
-          readOnly
-        />
-        <Input
-          label="Example"
-          labelPlacement="outside"
-          placeholder="e.g: 1, John Doe, apple, guava, orange"
-          className="max-w-sm"
-          variant="faded"
-          readOnly
-        />
-        <Select variant="faded" label="Query Type" labelPlacement="outside" className="max-w-xs" defaultSelectedKeys={["String"]}>
-          {["String", "Integer", "Array(Comma Separated)", "Array(Multi Key)"].map((el) => (
-            <SelectItem key={el}>{el}</SelectItem>
-          ))}
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <div className="flex">
-          <Input
-            label="Available Option (Optional)"
-            labelPlacement="outside-left"
-            size="sm"
-            placeholder="e.g: SUCCESS, FAILED"
-            className="max-w-sm"
-            variant="underlined"
-            value={optionName}
-            onChange={(e) => setOptionName(e.target.value)}
-          />
-          <Button
-            disabled={!Boolean(optionName)}
-            isDisabled={!Boolean(optionName)}
-            variant="bordered"
-            onPress={onOptionChange}
-            size="sm"
-            color="secondary"
-          >
-            <RiAddLine />
-          </Button>
-        </div>
-        <div className="flex items-center gap-2">
-          {option.map((el, index) => (
-            <Chip
-              key={index}
-              color="secondary"
-              isCloseable
-              onClose={() => {
-                setOption([...option.filter((opt) => opt !== el)]);
-              }}
-            >
-              {el}
-            </Chip>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
