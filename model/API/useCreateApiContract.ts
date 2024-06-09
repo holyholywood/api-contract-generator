@@ -9,7 +9,14 @@ const useCreateApiContract = () => {
   const [query, setQuery] = useState<
     { key: string; example: string; type: "string" | "integer" | "array-comma" | "array-multi"; option: string[] }[]
   >([]);
-  const [responses, setResponses] = useState<{ code: number; title: string; description: string; body: string }[]>([]);
+  const [responses, setResponses] = useState<{ code: number; title: string; description: string; body: string }[]>([
+    {
+      body: "",
+      code: 200,
+      description: "",
+      title: "",
+    },
+  ]);
 
   function onEndPointChange(val: string) {
     const segmentList = extractEndpointSegmentFromString(val);
@@ -28,7 +35,13 @@ const useCreateApiContract = () => {
     clonedParams[index].type = type;
     setParams([...clonedParams]);
   }
+  function onResponseDataChange(index: number, data: { code: number; title: string; description: string; body: string }) {
+    const clonedResponse = responses;
+    clonedResponse[index] = data;
+    setResponses([...clonedResponse]);
+  }
   async function handleSubmit() {}
+
   return {
     STATE: {
       baseURL,
@@ -42,7 +55,7 @@ const useCreateApiContract = () => {
       query,
       setQuery,
       responses,
-      setResponses,
+      setResponses: onResponseDataChange,
     },
     HANDLER: { handleSubmit },
   };

@@ -91,7 +91,9 @@ const Home = () => {
             <div className="text-sm">Request Query</div>
             <MultiInput />
           </div>
-          <ResponseBodyInput />
+          {STATE.responses.map((response, index) => (
+            <ResponseBodyInput key={index} index={index} setResponses={STATE.setResponses} {...response} />
+          ))}
         </section>
       </div>
     </>
@@ -114,7 +116,25 @@ const FloatingAction = () => {
   );
 };
 
-const ResponseBodyInput = () => {
+type responseBodyInputProps = {
+  index: number;
+
+  code: number;
+  title: string;
+  description: string;
+  body: string;
+
+  setResponses: (
+    index: number,
+    data: {
+      code: number;
+      title: string;
+      description: string;
+      body: string;
+    }
+  ) => void;
+};
+const ResponseBodyInput = ({ index, setResponses, ...response }: responseBodyInputProps) => {
   return (
     <div className="space-y-8">
       <h2 className="font-medium">Response</h2>
@@ -127,7 +147,8 @@ const ResponseBodyInput = () => {
           type="number"
           min={100}
           max={599}
-          value="200"
+          value={String(response.code)}
+          onChange={(e) => setResponses(index, { ...response, code: Number(e.target.value) })}
           labelPlacement="outside"
         />
         <Button color="danger">
@@ -135,10 +156,24 @@ const ResponseBodyInput = () => {
           Remove
         </Button>
       </div>
-      <Input variant="faded" className="max-w-2xl" label="Title" placeholder="e.g: Expected Condition" labelPlacement="outside" />
-      <Textarea variant="faded" label="Description" labelPlacement="outside" />
+      <Input
+        variant="faded"
+        className="max-w-2xl"
+        label="Title"
+        placeholder="e.g: Expected Response Condition"
+        labelPlacement="outside"
+        value={response.title}
+        onChange={(e) => setResponses(index, { ...response, title: e.target.value })}
+      />
+      <Textarea
+        variant="faded"
+        label="Description"
+        labelPlacement="outside"
+        value={response.description}
+        onChange={(e) => setResponses(index, { ...response, description: e.target.value })}
+      />
       <TextEditor label="Body" />
-      <Button startContent={<RiAddLine />} className="mx-auto flex" color="primary">
+      <Button startContent={<RiAddLine />} className="mx-auto flex" color="primary" variant="bordered">
         Add Response
       </Button>
     </div>
@@ -167,7 +202,7 @@ const MultiInput = () => {
               className=""
             >
               <RiDeleteBinLine />
-              Delete
+              Remove
             </Button>
           </div>
         </div>
@@ -181,6 +216,7 @@ const MultiInput = () => {
         startContent={<RiAddLine />}
         className="mx-auto flex"
         color="primary"
+        variant="bordered"
       >
         Add Request Query
       </Button>
@@ -192,7 +228,7 @@ const QueryInput = () => {
   const [option, setOption] = useState<string[]>([]);
   const [optionName, setOptionName] = useState<string>("");
   function onOptionChange() {
-    if (!option.includes(optionName)) {
+    if (!option.includes(optionName) && Boolean(optionName)) {
       setOption([...option, optionName]);
     }
     setOptionName("");
@@ -234,7 +270,14 @@ const QueryInput = () => {
             value={optionName}
             onChange={(e) => setOptionName(e.target.value)}
           />
-          <Button onPress={onOptionChange} size="sm" color="secondary">
+          <Button
+            disabled={!Boolean(optionName)}
+            isDisabled={!Boolean(optionName)}
+            variant="bordered"
+            onPress={onOptionChange}
+            size="sm"
+            color="secondary"
+          >
             <RiAddLine />
           </Button>
         </div>
