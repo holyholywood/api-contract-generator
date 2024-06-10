@@ -2,6 +2,7 @@ import TextEditor from "@/components/molecules/TextEditor";
 import useCreateApiContract from "@/model/API/useCreateApiContract";
 import { HTTPMethodOptioType, HTTPMethodOption } from "@/resources/options";
 import { Button, Chip, Divider, Input, Select, SelectItem, Textarea } from "@nextui-org/react";
+import Head from "next/head";
 import { Fragment, useState } from "react";
 import { RiAddLine, RiDeleteBinLine } from "react-icons/ri";
 
@@ -9,6 +10,9 @@ const Home = () => {
   const { STATE, HANDLER } = useCreateApiContract();
   return (
     <>
+      <Head>
+        <title>API Contract Generator</title>
+      </Head>
       <FloatingAction />
       <div className="max-w-5xl mx-auto space-y-4 pb-40">
         <header className="py-8">

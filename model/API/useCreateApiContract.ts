@@ -40,6 +40,7 @@ const useCreateApiContract = () => {
     clonedResponse[index] = data;
     setResponses([...clonedResponse]);
   }
+
   async function handleSubmit() {}
 
   return {
