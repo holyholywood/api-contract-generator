@@ -2,6 +2,7 @@ import { HTTPMethodOptioType } from "@/resources/options";
 import { useState } from "react";
 
 const useCreateApiContract = () => {
+  const [title, setTitle] = useState<string>("");
   const [baseURL, setBaseURL] = useState<string>("");
   const [endpoint, setEndPoint] = useState<string>("");
   const [method, setMethod] = useState<HTTPMethodOptioType>("GET");
@@ -40,11 +41,21 @@ const useCreateApiContract = () => {
     clonedResponse[index] = data;
     setResponses([...clonedResponse]);
   }
-
-  async function handleSubmit() {}
+  async function handleSubmit() {
+    console.info({
+      method,
+      baseURL,
+      endpoint,
+      query,
+      params,
+      responses,
+    });
+  }
 
   return {
     STATE: {
+      title,
+      setTitle,
       baseURL,
       setBaseURL,
       endpoint,
