@@ -1,24 +1,31 @@
+import { queryInputType } from "@/model/API/type";
 import { Button, Chip, Input, Select, SelectItem } from "@nextui-org/react";
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { RiAddLine, RiDeleteBinLine } from "react-icons/ri";
 
-const MultiQueryInput = () => {
-  const [count, setCount] = useState<number>(1);
-  const [queryCount, setQueryCount] = useState<number[]>([1]);
+interface multiQueryInputProps {
+  queries: Array<queryInputType>;
+  handler: {
+    onQueryChange: (index: number, data: queryInputType) => void;
+    onQueryOptionChange: (index: number, options: string[]) => void;
+    onAddQuery: () => void;
+    onRemoveQuery: (index: number) => void;
+  };
+}
+const MultiQueryInput = memo(({ queries, handler }: multiQueryInputProps) => {
   return (
-    <div className="space-y-8">
-      {queryCount.map((item, index) => (
-        <div className="flex w-full gap-8" key={item}>
+    <div className="space-y-8 max-w-5xl">
+      {queries.map((item, index) => (
+        <div className="flex w-full gap-8" key={index}>
           <div className="w-full">
-            <QueryInput />
+            <QueryInput data={item} index={index} onQueryChange={handler.onQueryChange} onQueryOptionChange={handler.onQueryOptionChange} />
           </div>
           <div className="flex items-center justify-center h-full mt-6">
             <Button
-              disabled={queryCount.length < 2}
-              isDisabled={queryCount.length < 2}
+              disabled={queries.length < 1}
+              isDisabled={queries.length < 1}
               onPress={() => {
-                setQueryCount([...queryCount.filter((el) => el !== item)]);
-                setCount(count - 1);
+                handler.onRemoveQuery(index);
               }}
               color="danger"
               className=""
@@ -31,13 +38,9 @@ const MultiQueryInput = () => {
       ))}
       <Button
         size="sm"
-        onPress={() => {
-          const now = count + 1;
-          setCount(now);
-          setQueryCount([...Array.from(Array(now), (_, i) => i + 1)]);
-        }}
+        onPress={handler.onAddQuery}
         startContent={<RiAddLine />}
-        className="mx-auto flex"
+        className={`${queries.length > 0 ? "mx-auto" : ""} flex`}
         color="primary"
         variant="bordered"
       >
@@ -45,16 +48,24 @@ const MultiQueryInput = () => {
       </Button>
     </div>
   );
-};
+});
 
 export default MultiQueryInput;
 
-const QueryInput = () => {
+interface queryInputProps {
+  index: number;
+  data: queryInputType;
+  onQueryChange: (index: number, data: queryInputType) => void;
+  onQueryOptionChange: (index: number, options: string[]) => void;
+}
+const QueryInput = memo(({ index, data, onQueryChange, onQueryOptionChange }: queryInputProps) => {
   const [option, setOption] = useState<string[]>([]);
   const [optionName, setOptionName] = useState<string>("");
   function onOptionChange() {
     if (!option.includes(optionName) && Boolean(optionName)) {
-      setOption([...option, optionName]);
+      const res = [...option, optionName];
+      setOption(res);
+      onQueryOptionChange(index, res);
     }
     setOptionName("");
   }
@@ -67,7 +78,8 @@ const QueryInput = () => {
           placeholder="e.g: created_at, name, sort_by, sort_method"
           className="max-w-sm"
           variant="faded"
-          readOnly
+          value={data.key}
+          onChange={({ target }) => onQueryChange(index, { ...data, key: target.value })}
         />
         <Input
           label="Example"
@@ -75,11 +87,23 @@ const QueryInput = () => {
           placeholder="e.g: 1, John Doe, apple, guava, orange"
           className="max-w-sm"
           variant="faded"
-          readOnly
+          value={String(data.example)}
+          onChange={({ target }) => onQueryChange(index, { ...data, example: target.value })}
         />
-        <Select variant="faded" label="Query Type" labelPlacement="outside" className="max-w-xs" defaultSelectedKeys={["String"]}>
-          {["String", "Integer", "Array(Comma Separated)", "Array(Multi Key)"].map((el) => (
-            <SelectItem key={el}>{el}</SelectItem>
+        <Select
+          variant="faded"
+          label="Query Type"
+          labelPlacement="outside"
+          className="max-w-xs"
+          defaultSelectedKeys={["string"]}
+          onSelectionChange={(val) => {
+            const res = Array.from(val)[0] as queryInputType["type"];
+
+            onQueryChange(index, { ...data, type: res });
+          }}
+        >
+          {staticData.map((el) => (
+            <SelectItem key={el.key}>{el.label}</SelectItem>
           ))}
         </Select>
       </div>
@@ -99,14 +123,16 @@ const QueryInput = () => {
             <RiAddLine />
           </Button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {option.map((el, index) => (
             <Chip
               key={index}
               color="secondary"
               isCloseable
               onClose={() => {
-                setOption([...option.filter((opt) => opt !== el)]);
+                const res = [...option.filter((opt) => opt !== el)];
+                setOption(res);
+                onQueryOptionChange(index, res);
               }}
             >
               {el}
@@ -116,4 +142,23 @@ const QueryInput = () => {
       </div>
     </div>
   );
-};
+});
+
+const staticData = [
+  {
+    label: "String",
+    key: "string",
+  },
+  {
+    label: "Number",
+    key: "number",
+  },
+  {
+    label: "Array(Comma Separated)",
+    key: "array-comma",
+  },
+  {
+    label: "Array(Multi Key)",
+    key: "array-multi",
+  },
+];

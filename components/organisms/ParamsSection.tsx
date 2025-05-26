@@ -1,21 +1,21 @@
 import { Divider, Input, Select, SelectItem } from "@nextui-org/react";
-import React, { Fragment } from "react";
+import React, { Fragment, memo } from "react";
 interface paramsSectionProps {
   params: {
     name: string;
-    type: "string" | "integer";
+    type: "string" | "number";
+    description: string;
   }[];
 
-  setParams: (index: number, type: "string" | "integer") => void;
+  setParams: (index: number, data: { type: "string" | "number"; description: string }) => void;
 }
 
-const ParamsSection = ({ params, setParams }: paramsSectionProps) => {
+const ParamsSection = memo(({ params, setParams }: paramsSectionProps) => {
   return (
-    <div className="space-y-6">
-      <div>URL Params</div>
-      <Divider className="bg-white !my-8" />
+    <>
       {params.length > 0 && (
-        <>
+        <div className="space-y-6">
+          <div>URL Params</div>
           {params.map((param, index) => (
             <Fragment key={index}>
               <div className="space-y-2">
@@ -38,21 +38,30 @@ const ParamsSection = ({ params, setParams }: paramsSectionProps) => {
                     variant="faded"
                     onSelectionChange={(val) => {
                       const type = Array.from(val);
-                      setParams(index, type[0] as "string" | "integer");
+                      setParams(index, { ...param, type: type[0] as "string" | "number" });
                     }}
                   >
-                    {["string", "integer"].map((el) => (
+                    {["string", "number"].map((el) => (
                       <SelectItem key={el}>{el}</SelectItem>
                     ))}
-                  </Select>
+                  </Select>{" "}
+                  <Input
+                    value={param.description}
+                    onChange={({ target }) => setParams(index, { ...param, description: target.value })}
+                    label="Params Decription"
+                    labelPlacement="outside"
+                    placeholder="e.g: get from logged in state"
+                    className="max-w-2xl"
+                    variant="faded"
+                  />
                 </div>
               </div>
             </Fragment>
           ))}
-        </>
+        </div>
       )}
-    </div>
+    </>
   );
-};
+});
 
 export default ParamsSection;

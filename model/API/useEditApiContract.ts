@@ -2,23 +2,27 @@ import ClientAPIContractService from "@/lib/client/service";
 import { HTTPMethodOptioType } from "@/resources/options";
 import { useRouter } from "next/router";
 import { useCallback, useMemo, useState } from "react";
-import { queryInputType } from "./type";
-const useCreateApiContract = () => {
-  const [title, setTitle] = useState<string>("");
-  const [baseURL, setBaseURL] = useState<string>("");
-  const [endpoint, setEndPoint] = useState<string>("");
-  const [method, setMethod] = useState<HTTPMethodOptioType>("GET");
-  const [params, setParams] = useState<{ name: string; type: "string" | "number"; description: string }[]>([]);
-  const [query, setQuery] = useState<queryInputType[]>([]);
-  const [reqBody, setReqBody] = useState({ reqBody: "", description: "" });
-  const [responses, setResponses] = useState<{ code: number; title: string; description: string; body: string }[]>([
-    {
-      body: "",
-      code: 200,
-      description: "",
-      title: "",
-    },
-  ]);
+import { apiContract, queryInputType } from "./type";
+
+const useEditApiContract = (id: string, data: apiContract) => {
+  const [title, setTitle] = useState<string>(data.title);
+  const [baseURL, setBaseURL] = useState<string>(data.baseURL);
+  const [endpoint, setEndPoint] = useState<string>(data.endpoint);
+  const [method, setMethod] = useState<HTTPMethodOptioType>(data.method);
+  const [params, setParams] = useState<{ name: string; type: "string" | "number"; description: string }[]>(data.params ?? []);
+  const [query, setQuery] = useState<queryInputType[]>(data.query ?? []);
+  const [reqBody, setReqBody] = useState(data.reqBody);
+  data.query;
+  const [responses, setResponses] = useState<{ code: number; title: string; description: string; body: string }[]>(
+    data.responses ?? [
+      {
+        body: "",
+        code: 200,
+        description: "",
+        title: "",
+      },
+    ]
+  );
 
   function onEndPointChange(val: string) {
     const segmentList = extractEndpointSegmentFromString(val);
@@ -95,18 +99,17 @@ const useCreateApiContract = () => {
     [title, method, endpoint, responses.length]
   );
   async function handleSubmit() {
-    setIsError(!isFormValid);
+    setIsError(false);
     if (isFormValid) {
       setIsLoading(true);
       const data = { method, title, baseURL, endpoint, reqBody, query: queryPayloadParser(query), params, responses };
       try {
-        const result = await ClientAPIContractService.create(data);
-        router.push("/" + result.id);
+        const result = await ClientAPIContractService.edit(id, data);
+        router.push("/" + result);
       } catch (error) {
         setIsError(true);
       }
       setIsLoading(false);
-      console.info(data);
     }
   }
 
@@ -142,7 +145,7 @@ const useCreateApiContract = () => {
   };
 };
 
-export default useCreateApiContract;
+export default useEditApiContract;
 
 function extractEndpointSegmentFromString(inputString: string): string[] {
   const slugsRegex = /\/:([^/]+)/g;

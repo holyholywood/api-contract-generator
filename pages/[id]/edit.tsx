@@ -1,16 +1,45 @@
+import APIContractService from "@/lib/services/api-contract-service";
+import { apiContract } from "@/model/API/type";
+import { GetServerSideProps } from "next";
 import FloatingAction from "@/components/organisms/FloatingAction";
 import MultiQueryInput from "@/components/organisms/MultiQueryInput";
 import ParamsSection from "@/components/organisms/ParamsSection";
 import RequestBodySection from "@/components/organisms/RequestBodySection";
 import ResponseSection from "@/components/organisms/ResponseSection";
+import ResultSection from "@/components/organisms/ResultSection";
 import Layout from "@/components/templates/Layout";
 import useCreateApiContract from "@/model/API/useCreateApiContract";
 import { HTTPMethodOptioType, HTTPMethodOption } from "@/resources/options";
 import { Divider, Input, Select, SelectItem } from "@nextui-org/react";
 import { RiCloseLine } from "react-icons/ri";
+import useEditApiContract from "@/model/API/useEditApiContract";
 
-const Home = () => {
-  const { STATE, HANDLER, UI } = useCreateApiContract();
+interface pageProps {
+  id: string;
+  data: apiContract;
+}
+
+export const getServerSideProps: GetServerSideProps<pageProps> = async ({ req, res, query, params }) => {
+  const id = params ? params.id : null;
+  if (!id) {
+    return {
+      notFound: true,
+    };
+  }
+  const data = await APIContractService.findByID(String(id));
+  if (!data) {
+    return { notFound: true };
+  }
+  return {
+    props: {
+      id: String(id),
+      data: JSON.parse(JSON.stringify(data)) as unknown as apiContract,
+    },
+  };
+};
+
+const EditAPIContractPage = ({ id, data }: pageProps) => {
+  const { STATE, HANDLER, UI } = useEditApiContract(id, data);
   return (
     <Layout>
       <FloatingAction isLoading={UI.isLoading} onSave={HANDLER.handleSubmit} />
@@ -86,4 +115,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default EditAPIContractPage;
